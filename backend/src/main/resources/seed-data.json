@@ -1,0 +1,157 @@
+{
+  "stores": [
+    {
+      "id": "store-bogota-norte",
+      "name": "Tractor Store Bogotá Norte",
+      "city": "Bogotá",
+      "addressLine": "Av. Carrera 7 #127-48"
+    },
+    {
+      "id": "store-medellin",
+      "name": "Tractor Store Medellín",
+      "city": "Medellín",
+      "addressLine": "Calle 10 #43A-30"
+    },
+    {
+      "id": "store-cali",
+      "name": "Tractor Store Cali",
+      "city": "Cali",
+      "addressLine": "Calle 5 #38-24"
+    }
+  ],
+  "inventory": {
+    "AGR-100-RED": 4,
+    "AGR-100-GREEN": 0,
+    "AGR-100-YELLOW": 12,
+    "AUTO-X1-BLUE": 3,
+    "AUTO-X1-WHITE": 7,
+    "AUTO-X1-GRAPHITE": 2,
+    "COM-50-BLACK": 5,
+    "COM-50-SILVER": 6,
+    "COM-50-ORANGE": 1,
+    "MIN-20-RED": 8,
+    "MIN-20-NAVY": 4,
+    "MIN-20-CAMO": 0
+  },
+  "products": [
+    {
+      "id": "agri-classic-100",
+      "name": "AgriClassic 100",
+      "category": "classic",
+      "highlights": [
+        "Motor diésel 95 CV",
+        "Transmisión mecánica 12x12",
+        "Cabina climatizada opcional"
+      ],
+      "variants": [
+        {
+          "sku": "AGR-100-RED",
+          "label": "Rojo granja",
+          "colorHex": "#C0392B",
+          "price": 78500.00
+        },
+        {
+          "sku": "AGR-100-GREEN",
+          "label": "Verde campo",
+          "colorHex": "#1E8449",
+          "price": 78500.00
+        },
+        {
+          "sku": "AGR-100-YELLOW",
+          "label": "Amarillo seguridad",
+          "colorHex": "#F1C40F",
+          "price": 79900.00
+        }
+      ]
+    },
+    {
+      "id": "autonomous-x1",
+      "name": "AutoDrive X1",
+      "category": "autonomous",
+      "highlights": [
+        "Guiado RTK integrado",
+        "Red eléctrica híbrida",
+        "Telemetría en tiempo real"
+      ],
+      "variants": [
+        {
+          "sku": "AUTO-X1-BLUE",
+          "label": "Azul cielo",
+          "colorHex": "#2980B9",
+          "price": 142000.00
+        },
+        {
+          "sku": "AUTO-X1-WHITE",
+          "label": "Blanco polar",
+          "colorHex": "#ECF0F1",
+          "price": 142000.00
+        },
+        {
+          "sku": "AUTO-X1-GRAPHITE",
+          "label": "Grafito",
+          "colorHex": "#566573",
+          "price": 144500.00
+        }
+      ]
+    },
+    {
+      "id": "compact-50",
+      "name": "CompactPro 50",
+      "category": "classic",
+      "highlights": [
+        "Ideal para viñedos y invernaderos",
+        "Radio de giro corto",
+        "Enganche III categoría"
+      ],
+      "variants": [
+        {
+          "sku": "COM-50-BLACK",
+          "label": "Negro mate",
+          "colorHex": "#17202A",
+          "price": 51200.00
+        },
+        {
+          "sku": "COM-50-SILVER",
+          "label": "Plata industrial",
+          "colorHex": "#BDC3C7",
+          "price": 51200.00
+        },
+        {
+          "sku": "COM-50-ORANGE",
+          "label": "Naranja alta visibilidad",
+          "colorHex": "#E67E22",
+          "price": 52800.00
+        }
+      ]
+    },
+    {
+      "id": "mini-hydro-20",
+      "name": "MiniHydro 20",
+      "category": "classic",
+      "highlights": [
+        "Hidráulico dedicado para cargador frontal",
+        "Pacto urbano y fincas pequeñas"
+      ],
+      "variants": [
+        {
+          "sku": "MIN-20-RED",
+          "label": "Rojo cereza",
+          "colorHex": "#922B21",
+          "price": 28900.00
+        },
+        {
+          "sku": "MIN-20-NAVY",
+          "label": "Azul marino",
+          "colorHex": "#1B4F72",
+          "price": 28900.00
+        },
+        {
+          "sku": "MIN-20-CAMO",
+          "label": "Verde bosque",
+          "colorHex": "#145A32",
+          "price": 29500.00
+        }
+      ]
+    }
+  ]
+}
