@@ -4,5 +4,5 @@ import com.tractorstore.order.entities.Order;
 
 public interface OrderWritePort {
 
-	void save(Order order);
+  void save(Order order);
 }

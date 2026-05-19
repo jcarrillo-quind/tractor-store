@@ -9,13 +9,17 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>tractor-store</name>
 	<packaging>jar</packaging>
-	<description>The Tractor Store — fase 1: dominio en Java puro (convención Spring Modulith en paquetes)</description>
+	<description>The Tractor Store — dominio y casos de uso (Java 21); fase B2: formato y tests mejorados.</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.release>21</maven.compiler.release>
 		<jackson.version>2.18.3</jackson.version>
 		<junit.version>5.11.4</junit.version>
+		<assertj.version>3.27.3</assertj.version>
+		<mockito.version>5.17.0</mockito.version>
+		<spotless.version>2.44.5</spotless.version>
+		<google-java-format.version>1.29.0</google-java-format.version>
 	</properties>
 
 	<dependencies>
@@ -30,10 +34,23 @@
 			<version>${jackson.version}</version>
 		</dependency>
 
+		<!-- Test -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>${assertj.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -55,6 +72,34 @@
 				<configuration>
 					<useModulePath>false</useModulePath>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>${spotless.version}</version>
+				<configuration>
+					<java>
+						<includes>
+							<include>src/**/*.java</include>
+						</includes>
+						<googleJavaFormat>
+							<version>${google-java-format.version}</version>
+							<style>GOOGLE</style>
+							<reflowLongStrings>false</reflowLongStrings>
+						</googleJavaFormat>
+						<trimTrailingWhitespace />
+						<endWithNewline />
+					</java>
+				</configuration>
+				<executions>
+					<execution>
+						<id>spotless-java-check</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<phase>validate</phase>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
