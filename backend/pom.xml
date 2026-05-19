@@ -4,18 +4,23 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.4.5</version>
+		<relativePath />
+	</parent>
+
 	<groupId>com.tractorstore</groupId>
 	<artifactId>tractor-store</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>tractor-store</name>
 	<packaging>jar</packaging>
-	<description>The Tractor Store — dominio y casos de uso (Java 21); fase B2: formato y tests mejorados.</description>
+	<description>The Tractor Store — dominio, API REST (Spring Boot 3) y tests.</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.release>21</maven.compiler.release>
-		<jackson.version>2.18.3</jackson.version>
-		<junit.version>5.11.4</junit.version>
+		<java.version>21</java.version>
 		<assertj.version>3.27.3</assertj.version>
 		<mockito.version>5.17.0</mockito.version>
 		<spotless.version>2.44.5</spotless.version>
@@ -24,21 +29,14 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>${jackson.version}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<!-- Test -->
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>${junit.version}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -58,20 +56,8 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
-				<configuration>
-					<release>${maven.compiler.release}</release>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.2</version>
-				<configuration>
-					<useModulePath>false</useModulePath>
-				</configuration>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
@@ -100,14 +86,6 @@
 						<phase>validate</phase>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.5.0</version>
-				<configuration>
-					<mainClass>com.tractorstore.TractorStoreDemo</mainClass>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
