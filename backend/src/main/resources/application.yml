@@ -13,3 +13,10 @@ tractor-store:
     allowed-origins:
       - http://localhost:4200
       - http://127.0.0.1:4200
+  cart:
+    cookie-name: TRACTOR_CART_SESSION
+    max-age-seconds: 604800
+    path: /
+    http-only: true
+    secure: false
+    same-site: Lax

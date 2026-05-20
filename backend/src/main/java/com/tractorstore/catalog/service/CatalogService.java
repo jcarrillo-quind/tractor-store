@@ -1,5 +1,6 @@
 package com.tractorstore.catalog.service;
 
+import com.tractorstore.bootstrap.SeedBundle;
 import com.tractorstore.catalog.entities.Product;
 import com.tractorstore.catalog.entities.Variant;
 import com.tractorstore.catalog.model.CategoryFilterDto;
@@ -8,12 +9,15 @@ import com.tractorstore.catalog.model.CategoryTeaserDto;
 import com.tractorstore.catalog.model.HomeResponse;
 import com.tractorstore.catalog.model.ProductDetailDto;
 import com.tractorstore.catalog.model.ProductSummaryDto;
+import com.tractorstore.catalog.model.RecommendationsResponse;
 import com.tractorstore.catalog.model.StoreDto;
 import com.tractorstore.catalog.model.VariantDto;
 import com.tractorstore.catalog.repository.InMemoryCatalogRepository;
+import com.tractorstore.catalog.usecases.RecommendVariantsByColorUseCase;
 import com.tractorstore.store.entities.Store;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +30,7 @@ import org.springframework.stereotype.Service;
 public class CatalogService {
 
   private static final int HOME_TEASERS_PER_CATEGORY = 3;
+  private static final int DEFAULT_RECOMMENDATION_LIMIT = 8;
 
   private static final Map<String, String> CATEGORY_LABELS =
       Map.of(
@@ -38,9 +43,11 @@ public class CatalogService {
           "autonomous", "Guiado preciso y telemetría integrada");
 
   private final InMemoryCatalogRepository repository;
+  private final RecommendVariantsByColorUseCase recommendations;
 
-  public CatalogService(InMemoryCatalogRepository repository) {
+  public CatalogService(InMemoryCatalogRepository repository, SeedBundle seedBundle) {
     this.repository = repository;
+    this.recommendations = new RecommendVariantsByColorUseCase(seedBundle.catalogReadPort());
   }
 
   public HomeResponse getHome() {
@@ -84,6 +91,22 @@ public class CatalogService {
 
   public List<StoreDto> listStores() {
     return repository.findAllStores().stream().map(this::toStore).toList();
+  }
+
+  public RecommendationsResponse getRecommendations(String skusCsv, Integer limit) {
+    int effectiveLimit =
+        limit == null || limit <= 0 ? DEFAULT_RECOMMENDATION_LIMIT : Math.min(limit, 50);
+    List<String> skus = parseSkus(skusCsv);
+    List<VariantDto> variants =
+        recommendations.execute(skus, effectiveLimit).stream().map(this::toVariant).toList();
+    return new RecommendationsResponse(variants);
+  }
+
+  private static List<String> parseSkus(String skusCsv) {
+    if (skusCsv == null || skusCsv.isBlank()) {
+      return List.of();
+    }
+    return Arrays.stream(skusCsv.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList();
   }
 
   private ProductSummaryDto toSummary(Product product) {

@@ -10,6 +10,12 @@ import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+  @ExceptionHandler(IllegalArgumentException.class)
+  ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(Map.of("code", "BAD_REQUEST", "message", ex.getMessage()));
+  }
+
   @ExceptionHandler(ResponseStatusException.class)
   ResponseEntity<Map<String, Object>> handleStatus(ResponseStatusException ex) {
     HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());

@@ -59,6 +59,15 @@ class CatalogControllerTest {
   }
 
   @Test
+  void recommendations_returnsVariantsExcludingSeeds() throws Exception {
+    mockMvc
+        .perform(get("/api/catalog/recommendations").param("skus", "AGR-100-RED,MIN-20-RED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.variants").isArray())
+        .andExpect(jsonPath("$.variants[0].sku").exists());
+  }
+
+  @Test
   void stores_returnsSeedStores() throws Exception {
     MvcResult result =
         mockMvc.perform(get("/api/catalog/stores")).andExpect(status().isOk()).andReturn();
