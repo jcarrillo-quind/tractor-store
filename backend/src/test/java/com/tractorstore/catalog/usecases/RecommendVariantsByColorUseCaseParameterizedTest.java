@@ -44,10 +44,10 @@ class RecommendVariantsByColorUseCaseParameterizedTest {
             "classic",
             List.of(),
             List.of(
-                new Variant("P-RED", "Rojo", "#FF0000", BigDecimal.ONE, ""),
-                new Variant("P-SHADE", "Rojo oscuro", "#BB0000", BigDecimal.ONE, ""),
-                new Variant("P-GREEN", "Verde", "#00DD00", BigDecimal.ONE, ""),
-                new Variant("P-BLACK", "Negro", "#000000", BigDecimal.ONE, "")));
+                new Variant("P-RED", "Rojo", "#FF0000", BigDecimal.ONE, "", ""),
+                new Variant("P-SHADE", "Rojo oscuro", "#BB0000", BigDecimal.ONE, "", ""),
+                new Variant("P-GREEN", "Verde", "#00DD00", BigDecimal.ONE, "", ""),
+                new Variant("P-BLACK", "Negro", "#000000", BigDecimal.ONE, "", "")));
 
     return Stream.of(
         Arguments.of(
@@ -85,10 +85,10 @@ class RecommendVariantsByColorUseCaseParameterizedTest {
         "classic",
         List.of(),
         List.of(
-            new Variant("P-A", "", "#660000", BigDecimal.ONE, ""),
-            new Variant("P-B", "", "#660000", BigDecimal.ONE, ""),
-            new Variant("P-GREEN", "", "#00BB00", BigDecimal.ONE, ""),
-            new Variant("P-WHITE", "", "#F0F0F0", BigDecimal.ONE, "")));
+            new Variant("P-A", "", "#660000", BigDecimal.ONE, "", ""),
+            new Variant("P-B", "", "#660000", BigDecimal.ONE, "", ""),
+            new Variant("P-GREEN", "", "#00BB00", BigDecimal.ONE, "", ""),
+            new Variant("P-WHITE", "", "#F0F0F0", BigDecimal.ONE, "", "")));
   }
 
   /** Dos SKUs mismo gris medio; cyan lejos del rojo puro cuando la semilla se excluye. */
@@ -99,10 +99,10 @@ class RecommendVariantsByColorUseCaseParameterizedTest {
         "classic",
         List.of(),
         List.of(
-            new Variant("P-RED", "", "#FF0000", BigDecimal.ONE, ""),
-            new Variant("Z-TWIN", "", "#808080", BigDecimal.ONE, ""),
-            new Variant("A-TWIN", "", "#808080", BigDecimal.ONE, ""),
-            new Variant("P-CYAN", "", "#00FFFF", BigDecimal.ONE, "")));
+            new Variant("P-RED", "", "#FF0000", BigDecimal.ONE, "", ""),
+            new Variant("Z-TWIN", "", "#808080", BigDecimal.ONE, "", ""),
+            new Variant("A-TWIN", "", "#808080", BigDecimal.ONE, "", ""),
+            new Variant("P-CYAN", "", "#00FFFF", BigDecimal.ONE, "", "")));
   }
 
   @ParameterizedTest(name = "{0}")

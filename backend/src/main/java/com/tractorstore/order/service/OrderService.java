@@ -1,15 +1,19 @@
 package com.tractorstore.order.service;
 
-import com.tractorstore.bootstrap.SeedBundle;
 import com.tractorstore.cart.entities.Cart;
 import com.tractorstore.cart.model.LineItemDto;
 import com.tractorstore.cart.service.CartService;
 import com.tractorstore.cart.support.CartSessionSupport;
+import com.tractorstore.catalog.entities.Variant;
+import com.tractorstore.catalog.usecases.FindVariantBySkuUseCase;
+import com.tractorstore.catalog.usecases.ports.CatalogReadPort;
 import com.tractorstore.order.entities.Order;
 import com.tractorstore.order.model.OrderResponse;
 import com.tractorstore.order.model.PlaceOrderRequest;
 import com.tractorstore.order.usecases.GetOrderByIdUseCase;
 import com.tractorstore.order.usecases.PlaceOrderUseCase;
+import com.tractorstore.order.usecases.ports.OrderReadPort;
+import com.tractorstore.order.usecases.ports.OrderWritePort;
 import com.tractorstore.store.usecases.ports.StoreReadPort;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,14 +32,21 @@ public class OrderService {
   private final CartService cartService;
   private final CartSessionSupport sessionSupport;
   private final StoreReadPort stores;
+  private final FindVariantBySkuUseCase findVariant;
 
   public OrderService(
-      CartService cartService, CartSessionSupport sessionSupport, SeedBundle seedBundle) {
+      CartService cartService,
+      CartSessionSupport sessionSupport,
+      StoreReadPort stores,
+      CatalogReadPort catalog,
+      OrderWritePort orderWrite,
+      OrderReadPort orderRead) {
     this.cartService = cartService;
     this.sessionSupport = sessionSupport;
-    this.stores = seedBundle.storeReadPort();
-    this.placeOrder = new PlaceOrderUseCase(seedBundle.orderWritePort());
-    this.getOrder = new GetOrderByIdUseCase(seedBundle.orderReadPort());
+    this.stores = stores;
+    this.findVariant = new FindVariantBySkuUseCase(catalog);
+    this.placeOrder = new PlaceOrderUseCase(orderWrite);
+    this.getOrder = new GetOrderByIdUseCase(orderRead);
   }
 
   public OrderResponse placeOrder(
@@ -89,9 +100,22 @@ public class OrderService {
     List<LineItemDto> lines =
         order.lines().stream()
             .map(
-                line ->
-                    new LineItemDto(
-                        line.sku(), line.quantity(), line.unitPrice(), line.lineTotal()))
+                line -> {
+                  Variant variant =
+                      findVariant
+                          .execute(line.sku())
+                          .orElseThrow(
+                              () ->
+                                  new IllegalStateException(
+                                      "SKU en pedido sin catálogo: " + line.sku()));
+                  return new LineItemDto(
+                      line.sku(),
+                      line.quantity(),
+                      line.unitPrice(),
+                      line.lineTotal(),
+                      variant.label(),
+                      variant.imageUrl());
+                })
             .toList();
     return new OrderResponse(
         order.id().toString(),

@@ -7,6 +7,7 @@ import com.tractorstore.bootstrap.SeedBundle;
 import com.tractorstore.catalog.adapters.InMemoryCatalogAdapter;
 import com.tractorstore.catalog.entities.Product;
 import com.tractorstore.catalog.entities.Variant;
+import com.tractorstore.catalog.model.CategoryMeta;
 import com.tractorstore.catalog.usecases.ports.CatalogReadPort;
 import com.tractorstore.inventory.adapters.InMemoryInventoryAdapter;
 import com.tractorstore.inventory.usecases.ports.InventoryReadPort;
@@ -41,9 +42,13 @@ public final class ClasspathJsonSeedDataAdapter {
         throw new IllegalArgumentException("Recurso no encontrado: " + resourcePath);
       }
       SeedJson root = MAPPER.readValue(in, SeedJson.class);
+      List<CategoryMeta> categories = new ArrayList<>();
+      for (CategoryJson c : root.categories == null ? List.<CategoryJson>of() : root.categories) {
+        categories.add(new CategoryMeta(c.id, c.label, c.tagline, nullToEmpty(c.imageUrl)));
+      }
       List<Store> stores = new ArrayList<>();
       for (StoreJson s : root.stores == null ? List.<StoreJson>of() : root.stores) {
-        stores.add(new Store(s.id, s.name, s.city, s.addressLine));
+        stores.add(new Store(s.id, s.name, s.city, s.addressLine, nullToEmpty(s.imageUrl)));
       }
       Map<String, Integer> inv = new HashMap<>();
       if (root.inventory != null) {
@@ -53,11 +58,11 @@ public final class ClasspathJsonSeedDataAdapter {
       for (ProductJson p : root.products == null ? List.<ProductJson>of() : root.products) {
         List<Variant> loose = new ArrayList<>();
         for (VariantJson v : p.variants == null ? List.<VariantJson>of() : p.variants) {
-          loose.add(new Variant(v.sku, v.label, v.colorHex, v.price, ""));
+          loose.add(new Variant(v.sku, v.label, v.colorHex, v.price, "", nullToEmpty(v.imageUrl)));
         }
         products.add(Product.fromSeed(p.id, p.name, p.category, p.highlights, loose));
       }
-      CatalogReadPort catalog = new InMemoryCatalogAdapter(products);
+      CatalogReadPort catalog = new InMemoryCatalogAdapter(products, categories);
       StoreReadPort storePort = new InMemoryStoreAdapter(stores);
       InventoryReadPort inventoryPort = new InMemoryInventoryAdapter(inv);
       InMemoryOrderAdapter orderStore = new InMemoryOrderAdapter();
@@ -69,11 +74,24 @@ public final class ClasspathJsonSeedDataAdapter {
     }
   }
 
+  private static String nullToEmpty(String value) {
+    return value == null ? "" : value;
+  }
+
   @JsonIgnoreProperties(ignoreUnknown = true)
   static final class SeedJson {
+    public List<CategoryJson> categories;
     public List<StoreJson> stores;
     public Map<String, Integer> inventory;
     public List<ProductJson> products;
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  static final class CategoryJson {
+    public String id;
+    public String label;
+    public String tagline;
+    public String imageUrl;
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -82,6 +100,7 @@ public final class ClasspathJsonSeedDataAdapter {
     public String name;
     public String city;
     public String addressLine;
+    public String imageUrl;
   }
 
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -99,5 +118,6 @@ public final class ClasspathJsonSeedDataAdapter {
     public String label;
     public String colorHex;
     public BigDecimal price;
+    public String imageUrl;
   }
 }

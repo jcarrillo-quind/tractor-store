@@ -1,6 +1,5 @@
 package com.tractorstore.cart.service;
 
-import com.tractorstore.bootstrap.SeedBundle;
 import com.tractorstore.cart.entities.Cart;
 import com.tractorstore.cart.entities.LineItem;
 import com.tractorstore.cart.model.AddCartItemRequest;
@@ -15,7 +14,9 @@ import com.tractorstore.cart.usecases.GetCartSnapshotUseCase;
 import com.tractorstore.cart.usecases.RemoveCartLineUseCase;
 import com.tractorstore.catalog.entities.Variant;
 import com.tractorstore.catalog.usecases.FindVariantBySkuUseCase;
+import com.tractorstore.catalog.usecases.ports.CatalogReadPort;
 import com.tractorstore.inventory.usecases.GetStockAvailabilityUseCase;
+import com.tractorstore.inventory.usecases.ports.InventoryReadPort;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -37,14 +38,15 @@ public class CartService {
   public CartService(
       InMemoryCartSessionRepository sessions,
       CartSessionSupport sessionSupport,
-      SeedBundle seedBundle) {
+      CatalogReadPort catalog,
+      InventoryReadPort inventory) {
     this.sessions = sessions;
     this.sessionSupport = sessionSupport;
     this.snapshotUseCase = new GetCartSnapshotUseCase();
     this.addLineUseCase = new AddOrMergeCartLineUseCase();
     this.removeLineUseCase = new RemoveCartLineUseCase();
-    this.findVariant = new FindVariantBySkuUseCase(seedBundle.catalogReadPort());
-    this.stock = new GetStockAvailabilityUseCase(seedBundle.inventoryReadPort());
+    this.findVariant = new FindVariantBySkuUseCase(catalog);
+    this.stock = new GetStockAvailabilityUseCase(inventory);
   }
 
   public CartResponse getCart(HttpServletRequest request, HttpServletResponse response) {
@@ -107,9 +109,22 @@ public class CartService {
     List<LineItemDto> lines =
         snapshot.lines().stream()
             .map(
-                line ->
-                    new LineItemDto(
-                        line.sku(), line.quantity(), line.unitPrice(), line.lineTotal()))
+                line -> {
+                  Variant variant =
+                      findVariant
+                          .execute(line.sku())
+                          .orElseThrow(
+                              () ->
+                                  new IllegalStateException(
+                                      "SKU en carrito sin catálogo: " + line.sku()));
+                  return new LineItemDto(
+                      line.sku(),
+                      line.quantity(),
+                      line.unitPrice(),
+                      line.lineTotal(),
+                      variant.label(),
+                      variant.imageUrl());
+                })
             .toList();
     return new CartResponse(
         lines, snapshot.itemCount(), snapshot.subtotal(), List.copyOf(cart.skus()));

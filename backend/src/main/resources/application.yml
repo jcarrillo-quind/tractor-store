@@ -9,6 +9,8 @@ server:
     context-path: /
 
 tractor-store:
+  persistence:
+    mode: postgres
   cors:
     allowed-origins:
       - http://localhost:4200

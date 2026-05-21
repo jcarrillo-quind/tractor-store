@@ -1,0 +1,13 @@
+# Perfil sin PostgreSQL: dataset desde classpath (seed-data.json).
+# Uso: spring.profiles.active=inmemory  (o dev,inmemory si combinas CORS/puerto de dev)
+
+tractor-store:
+  persistence:
+    mode: inmemory
+
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration

@@ -5,7 +5,12 @@ import java.util.Objects;
 
 /** Variante vendible (SKU) de un producto del catálogo. */
 public record Variant(
-    String sku, String label, String colorHex, BigDecimal price, String productId) {
+    String sku,
+    String label,
+    String colorHex,
+    BigDecimal price,
+    String productId,
+    String imageUrl) {
   public Variant {
     Objects.requireNonNull(sku, "sku");
     Objects.requireNonNull(colorHex, "colorHex");

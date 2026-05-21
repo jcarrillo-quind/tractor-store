@@ -43,8 +43,13 @@ public record Product(
       List<Variant> looseVariants) {
     List<Variant> bound = new ArrayList<>(looseVariants.size());
     for (Variant v : looseVariants) {
-      bound.add(new Variant(v.sku(), v.label(), v.colorHex(), v.price(), id));
+      bound.add(
+          new Variant(v.sku(), v.label(), v.colorHex(), v.price(), id, nullToEmpty(v.imageUrl())));
     }
     return new Product(id, name, category, highlights, bound);
+  }
+
+  private static String nullToEmpty(String value) {
+    return value == null ? "" : value;
   }
 }

@@ -4,62 +4,127 @@
 
 ### Equipos y responsabilidades
 
-| Equipo | Alcance en el sitio |
-|--------|----------------------|
-| **Team Explore** | Home, listados por categoría, tiendas, recomendaciones, cabecera y pie. |
-| **Team Decide** | Ficha de producto, selector de variantes (SKU/color), estado *out of stock* según inventario. |
-| **Team Checkout** | Carrito, *mini-cart*, checkout con formulario, confirmación de pedido (*thanks*). |
+| Equipo | Alcance en el sitio | API que consume |
+|--------|----------------------|-----------------|
+| **Team Explore** | Home, listados, tiendas, recomendaciones | `catalog/*` |
+| **Team Decide** | PDP, variantes, *out of stock* | `catalog/products`, `inventory/{sku}` |
+| **Team Checkout** | Carrito, mini-cart, checkout, *thanks* | `cart/*`, `orders/*`, `catalog/stores` |
 
-### API prevista (orientación)
+### Contrato API
 
-Todas las respuestas en **JSON**; el **carrito** se mantendrá con **cookies de sesión** (las operaciones de escritura del carrito mutan la cookie).
-
-- **Catálogo:** home/teasers, categorías con filtros, detalle de producto, recomendaciones por color (CSV de SKUs), listado de tiendas físicas.
-- **Inventario:** stock por SKU.
-- **Carrito:** carrito completo, resumen *mini*, alta y baja de líneas por SKU.
-- **Pedidos:** creación de pedido (datos personales + tienda de recogida) y consulta por id.
-
-En fases posteriores el front consumirá estos endpoints desde el shell o desde MFEs dedicados (`mfe-explore`, `mfe-decide`, `mfe-checkout`).
+- Respuestas **JSON**; errores `{"code", "message", "details"?}` (400, 404, 409, 500).
+- Carrito: cookie **HttpOnly** `TRACTOR_CART_SESSION` (7 días, `SameSite=Lax`, path `/`). El front debe enviar credenciales (`withCredentials: true` en Angular).
+- Imágenes: campo **`imageUrl`** (URL absoluta) en categorías del home, variantes, tiendas y líneas de carrito/pedido (`label` + `imageUrl` en `lines[]`).
 
 ---
 
-## Estado actual — Fase 1
+## Estado actual
 
 ### Backend (`backend/`)
 
-Primera fase **sin Spring**: dominio y casos de uso en **Java 21** puro, organización al estilo **Spring Modulith** (un paquete por módulo de negocio) y **arquitectura limpia** por módulo:
+**Java 21** · **Maven** · **Spring Boot 3.4.x** · dominio en arquitectura limpia + REST MVC por módulo.
 
-- **entities** — modelo de dominio.
-- **usecases** — casos de uso y **ports** (interfaces).
-- **adapters** — infraestructura de esta fase (memoria, carga de datos).
+| Fase | Contenido |
+|------|-----------|
+| **1 — Dominio** | Módulos `catalog`, `store`, `inventory`, `cart`, `order`, `bootstrap`; puertos + adaptadores en memoria; `seed-data.json` |
+| **B2 — Calidad** | JUnit 5, AssertJ, Mockito, Spotless (`./mvnw spotless:apply`) |
+| **3a — REST (esqueleto)** | Spring Boot, CORS dev, catálogo base (home, categorías, producto, tiendas) |
+| **3b — REST (API completa)** | Recomendaciones, inventario, carrito con sesión por cookie, pedidos |
+| **4 — Persistencia** | PostgreSQL + Flyway; catálogo, tiendas e inventario en BD; carrito/pedidos siguen en memoria |
+| **4b — Persistencia + medios** | `PersistenceConfiguration` (postgres / inmemory); `image_url` en BD; API con `imageUrl` |
 
-**Módulos:** `catalog`, `store`, `inventory`, `cart`, `order`, más `bootstrap` para componer el `SeedBundle` desde **JSON** (`seed-data.json`).
+#### Fase 3b — Entregables de esta ampliación
 
-**Incluye:** recomendaciones por distancia de color en RGB, filtrado por categoría, búsqueda de producto por id, demos de carrito/pedido en dominio, tests de catálogo y un `main` de demostración (`TractorStoreDemo`).
+- **Catálogo:** `GET /api/catalog/recommendations?skus={csv}&limit=` (dominio RGB, límite default 8).
+- **Inventario:** `GET /api/inventory/{sku}`.
+- **Carrito:** `GET /api/cart`, `GET /api/cart/mini`, `POST /api/cart/items`, `DELETE /api/cart/items/{sku}`; validación de SKU y stock (409 si agotado).
+- **Pedidos:** `POST /api/orders`, `GET /api/orders/{id}`; vacía el carrito de la sesión al confirmar.
+- **Infra:** `CartSessionSupport`, `CartSessionProperties`, `InMemoryCartSessionRepository`; servicios delegan en casos de uso del dominio.
+- **Tests:** `InventoryControllerTest`, `CartAndOrderControllerTest`; ampliación de `CatalogControllerTest` (recomendaciones). **20 tests** en `./mvnw verify`.
 
-Para detalle técnico del back, revisa el `pom.xml` y el árbol bajo `backend/src/main/java/com/tractorstore/`.
+#### Todos los endpoints (implementados)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/catalog/home` | Teasers por categoría |
+| GET | `/api/catalog/categories/{filter}` | Listado + filtros disponibles |
+| GET | `/api/catalog/products/{id}` | Detalle PDP |
+| GET | `/api/catalog/recommendations?skus=&limit=` | Variantes por cercanía de color |
+| GET | `/api/catalog/stores` | Tiendas de recogida |
+| GET | `/api/inventory/{sku}` | `availableUnits`, `inStock` |
+| GET | `/api/cart` | Estado completo; emite cookie si falta |
+| GET | `/api/cart/mini` | `{ itemCount }` |
+| POST | `/api/cart/items` | `{ "sku" }` |
+| DELETE | `/api/cart/items/{sku}` | Elimina línea |
+| POST | `/api/orders` | `{ customerName, customerEmail, pickupStoreId }` |
+| GET | `/api/orders/{id}` | Confirmación (*thanks*) |
+
+Respuestas de catálogo, tiendas, carrito y pedidos incluyen **`imageUrl`** donde hay imagen (ver fase 4b).
+
+#### Fase 4 — PostgreSQL
+
+```sh
+docker compose up -d       # desde la raíz del repo
+cd backend && ./mvnw spring-boot:run
+```
+
+Flyway aplica `V1__schema.sql`, `V2__seed_data.sql` y `V3__image_urls.sql`. Catálogo, tiendas e inventario leen de **PostgreSQL**; carrito y pedidos siguen en memoria.
+
+**Switch de persistencia** (`application.yml` → `tractor-store.persistence.mode`):
+
+| Modo | Arranque | Fuente de datos |
+|------|----------|-----------------|
+| `postgres` (default) | `./mvnw spring-boot:run` + Postgres | JPA + Flyway |
+| `inmemory` | `./mvnw spring-boot:run -Dspring-boot.run.profiles=inmemory` | `seed-data.json` (sin Docker) |
+
+`PersistenceConfiguration` expone los mismos puertos (`CatalogReadPort`, `StoreReadPort`, `InventoryReadPort`) en ambos modos; los servicios REST no conocen el adaptador concreto.
+
+#### Fase 4b — URLs de imagen
+
+- Columnas `image_url` en `categories`, `variants`, `stores` (URL completa en BD).
+- Semilla alineada con el CDN del [blueprint](https://blueprint.the-tractor.store/) (`scene/500/`, `product/200/`, `store/200/`).
+- El API devuelve `imageUrl` en home, PDP, listados, recomendaciones, tiendas, carrito y pedidos.
+
+#### Comandos (`backend/`)
+
+```sh
+./mvnw verify              # dominio siempre; REST si hay Docker o TRACTOR_DB_URL
+./mvnw spotless:apply
+./mvnw spring-boot:run     # postgres: requiere localhost:5432
+./mvnw spring-boot:run -Dspring-boot.run.profiles=inmemory   # sin Postgres
+```
+
+#### Ejemplos curl
+
+```sh
+curl http://localhost:8080/api/catalog/home
+# featuredCategories[].imageUrl, teasers[].variants[].imageUrl
+
+curl http://localhost:8080/api/catalog/products/agri-classic-100
+# variants[].imageUrl
+
+curl "http://localhost:8080/api/catalog/recommendations?skus=AGR-100-RED,MIN-20-RED"
+curl http://localhost:8080/api/inventory/AGR-100-GREEN
+curl http://localhost:8080/api/catalog/stores
+curl -c cookies.txt http://localhost:8080/api/cart
+curl -b cookies.txt -H "Content-Type: application/json" \
+  -d '{"sku":"AGR-100-RED"}' http://localhost:8080/api/cart/items
+# lines[].imageUrl, lines[].label
+curl -b cookies.txt -H "Content-Type: application/json" \
+  -d '{"customerName":"Ana","customerEmail":"a@t.com","pickupStoreId":"store-bogota-norte"}' \
+  http://localhost:8080/api/orders
+```
+
+Arquitectura, paquetes y decisiones: [context.md](context.md).
 
 ### Frontend (`frontend/`)
 
-Monorepo **Nx** pensado para la **app shell** en Angular y, más adelante, los MFEs por equipo.
-
-**Qué hay hoy**
-
-- Aplicación **`shell`**: Angular con configuración **Rspack** (`apps/shell`).
-- **Lint** (ESLint) y **tests unitarios** (Jest) en el proyecto `shell`, según los targets Nx (`npx nx show project shell`).
-- Proyecto **`shell-e2e`**: **Playwright** con un spec de ejemplo; los targets concretos se listan con `npx nx show project shell-e2e`.
-
-**Qué falta (fase 1)**
-
-- No hay aún UI de producto: rutas y pantallas de catálogo, PDP, carrito, checkout ni integración HTTP con el backend.
-- Pendiente definir consumo de API (cliente, CORS, cookies de sesión del carrito cuando exista el API REST).
-
-**Comandos** (desde `frontend/`)
+- **Nx** + app **`shell`** (Angular, Rspack); Playwright de ejemplo.
+- Backend con **API completa**, CORS, cookies y **`imageUrl`** en respuestas de catálogo/carrito.
+- **Pendiente:** UI (home, listados, PDP, tiendas, carrito), modelos TS con `imageUrl`, `HttpClient` con `withCredentials`.
 
 ```sh
 npx nx serve shell
-npx nx build shell
-npx nx graph
 ```
 
-Documentación ampliada del front: [frontend/README.md](frontend/README.md).
+Más detalle: [frontend/README.md](frontend/README.md).
